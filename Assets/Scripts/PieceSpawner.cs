@@ -2,12 +2,18 @@ using UnityEngine;
 
 public class PieceSpawner : MonoBehaviour
 {
+    [SerializeField] private Board board;
     [SerializeField] private Piece piecePrefab;
     [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private Color[] colors;
     [SerializeField] private float trayScale = 0.55f;
 
-    private Piece[] pieces;                                  // 🆕
+    [Header("Difficulty")]
+    [SerializeField, Range(0f, 1f)] private float guaranteeChance = 1f;
+    [SerializeField] private float bigPieceWeight = 1f;
+    [SerializeField] private int maxAttempts = 30;
+
+    private Piece[] pieces;
 
     private void Start()
     {
@@ -16,24 +22,74 @@ public class PieceSpawner : MonoBehaviour
 
     public void SpawnPieces()
     {
-        pieces = new Piece[spawnPoints.Length];              // 🆕
+        Vector2Int[][] shapes = ChooseShapes();
+        pieces = new Piece[spawnPoints.Length];
 
-        for (int i = 0; i < spawnPoints.Length; i++)         // 🆕 foreach → for
+        for (int i = 0; i < spawnPoints.Length; i++)
         {
             Transform point = spawnPoints[i];
             Piece piece = Instantiate(piecePrefab, point.position, Quaternion.identity, point);
 
-            Vector2Int[] shape = BlockShapes.GetRandom();
             Color color = colors[Random.Range(0, colors.Length)];
-            piece.Setup(shape, color);
+            piece.Setup(shapes[i], color);
 
             piece.transform.localScale = Vector3.one * trayScale;
 
-            pieces[i] = piece;                               // 🆕
+            pieces[i] = piece;
         }
     }
 
-    // 🆕 위치 근처의 블록 찾기
+    private Vector2Int[][] ChooseShapes()
+    {
+        bool useGuarantee = Random.value < guaranteeChance;
+        bool[,] grid = board.GetOccupancy();
+        Vector2Int[][] shapes = new Vector2Int[spawnPoints.Length][];
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            for (int i = 0; i < shapes.Length; i++)
+            {
+                shapes[i] = GetWeightedRandomShape();
+            }
+
+            if (!useGuarantee || PlacementSolver.CanPlaceAll(grid, shapes))
+            {
+                return shapes;
+            }
+        }
+
+        return shapes;
+    }
+
+    private Vector2Int[] GetWeightedRandomShape()
+    {
+        float totalWeight = 0f;
+
+        foreach (Vector2Int[] shape in BlockShapes.All)
+        {
+            totalWeight += GetWeight(shape);
+        }
+
+        float pick = Random.Range(0f, totalWeight);
+
+        foreach (Vector2Int[] shape in BlockShapes.All)
+        {
+            pick -= GetWeight(shape);
+
+            if (pick <= 0f)
+            {
+                return shape;
+            }
+        }
+
+        return BlockShapes.All[BlockShapes.All.Length - 1];
+    }
+
+    private float GetWeight(Vector2Int[] shape)
+    {
+        return shape.Length >= 5 ? bigPieceWeight : 1f;
+    }
+
     public Piece GetPieceAt(Vector3 worldPosition, float radius)
     {
         for (int i = 0; i < pieces.Length; i++)
@@ -54,7 +110,6 @@ public class PieceSpawner : MonoBehaviour
         return null;
     }
 
-    // 🆕 판에 놓은 블록 치우기
     public void RemovePiece(Piece piece)
     {
         for (int i = 0; i < pieces.Length; i++)
@@ -73,7 +128,21 @@ public class PieceSpawner : MonoBehaviour
         }
     }
 
-    // 🆕 트레이가 비었는지
+    public bool HasPlaceablePiece()
+    {
+        bool[,] grid = board.GetOccupancy();
+
+        foreach (Piece piece in pieces)
+        {
+            if (piece != null && PlacementSolver.HasAnyPlacement(grid, piece.Cells))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private bool IsTrayEmpty()
     {
         foreach (Piece piece in pieces)

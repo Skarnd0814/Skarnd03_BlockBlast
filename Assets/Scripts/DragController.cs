@@ -7,6 +7,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private Board board;
     [SerializeField] private PieceSpawner spawner;
     [SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private GameManager gameManager;
     [SerializeField] private float pickRadius = 1.6f;
     [SerializeField] private float dragOffsetY = 1.5f;
 
@@ -84,14 +85,19 @@ public class DragController : MonoBehaviour
             }
 
             spawner.RemovePiece(draggingPiece);
+            draggingPiece = null;
+
+            if (!spawner.HasPlaceablePiece())
+            {
+                gameManager.GameOver();
+            }
         }
         else
         {
             draggingPiece.ReturnToTray();
             SoundManager.Instance.PlaySFX(failSfx);
+            draggingPiece = null;
         }
-
-        draggingPiece = null;
     }
 
     private void PlayLineClearSound(int lineCount)
