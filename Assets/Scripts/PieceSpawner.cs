@@ -14,9 +14,22 @@ public class PieceSpawner : MonoBehaviour
 
     [Header("Difficulty")]
     [SerializeField, Range(0f, 1f)] private float guaranteeChance = 1f;
-    [SerializeField] private float bigPieceWeight = 1f;
     [SerializeField, Range(0f, 1f)] private float lineClearBias = 0.5f;
     [SerializeField] private float holeFitWeight = 5f;
+
+    [Header("Shape Weights")]
+    [Tooltip("켜면 작은 블록(Small Piece Max Cells 이하)은 더 큰 블록을 놓을 자리가 없을 때만 등장")]
+    [SerializeField] private bool smallPiecesOnlyWhenNeeded = true;
+    [SerializeField] private int smallPieceMaxCells = 3;
+    [Tooltip("모양별 출현 가중치 (클수록 자주 나옴). 목록은 BlockShapes에 맞춰 자동으로 채워짐")]
+    [SerializeField] private ShapeWeight[] shapeWeights;
+
+    [System.Serializable]
+    private class ShapeWeight
+    {
+        public string name;
+        public float weight = 1f;
+    }
 
     [Header("Spawn Effect")]
     [SerializeField] private float spawnDuration = 0.3f;
@@ -25,6 +38,57 @@ public class PieceSpawner : MonoBehaviour
 
     private Piece[] pieces;
     private bool isSpawnAnimating;
+    private readonly Dictionary<Vector2Int[], float> weightLookup = new Dictionary<Vector2Int[], float>();
+
+    private void Reset()
+    {
+        SyncShapeWeights();
+    }
+
+    // Inspector 목록을 BlockShapes와 같은 개수·이름으로 맞춤 (모양을 추가해도 자동 반영, 기존 값은 유지)
+    private void OnValidate()
+    {
+        SyncShapeWeights();
+    }
+
+    private void SyncShapeWeights()
+    {
+        int count = BlockShapes.All.Length;
+
+        if (shapeWeights != null && shapeWeights.Length == count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                shapeWeights[i].name = BlockShapes.Names[i];
+            }
+
+            return;
+        }
+
+        ShapeWeight[] synced = new ShapeWeight[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            bool hasOld = shapeWeights != null && i < shapeWeights.Length;
+            synced[i] = new ShapeWeight
+            {
+                name = BlockShapes.Names[i],
+                weight = hasOld ? shapeWeights[i].weight : BlockShapes.DefaultWeights[i]
+            };
+        }
+
+        shapeWeights = synced;
+    }
+
+    private void Awake()
+    {
+        bool useInspector = shapeWeights != null && shapeWeights.Length == BlockShapes.All.Length;
+
+        for (int i = 0; i < BlockShapes.All.Length; i++)
+        {
+            weightLookup[BlockShapes.All[i]] = useInspector ? shapeWeights[i].weight : BlockShapes.DefaultWeights[i];
+        }
+    }
 
     private void Start()
     {
@@ -113,9 +177,11 @@ public class PieceSpawner : MonoBehaviour
         {
             List<Vector2Int[]> holes = PlacementSolver.FindEmptyRegions(grid, MaxHoleSize);
 
+            List<Vector2Int[]> randomCandidates = PreferLargePieces(allShapes);
+
             for (int i = 0; i < shapes.Length; i++)
             {
-                shapes[i] = PickWeighted(allShapes, holes);
+                shapes[i] = PickWeighted(randomCandidates, holes);
             }
 
             return shapes;
@@ -140,7 +206,7 @@ public class PieceSpawner : MonoBehaviour
                 continue;
             }
 
-            Vector2Int[] chosen = PickWeighted(candidates, holes);
+            Vector2Int[] chosen = PickWeighted(PreferLargePieces(candidates), holes);
             shapes[i] = chosen;
 
             Vector2Int origin = ChoosePlacement(grid, chosen, holes);
@@ -221,9 +287,30 @@ public class PieceSpawner : MonoBehaviour
         return candidates[candidates.Count - 1];
     }
 
+    // 큰 블록 후보가 하나라도 있으면 작은 블록은 후보에서 제외 (판이 막혀 큰 블록이 못 들어갈 때만 작은 블록 등장)
+    private List<Vector2Int[]> PreferLargePieces(List<Vector2Int[]> candidates)
+    {
+        if (!smallPiecesOnlyWhenNeeded)
+        {
+            return candidates;
+        }
+
+        List<Vector2Int[]> largePieces = new List<Vector2Int[]>();
+
+        foreach (Vector2Int[] shape in candidates)
+        {
+            if (shape.Length > smallPieceMaxCells)
+            {
+                largePieces.Add(shape);
+            }
+        }
+
+        return largePieces.Count > 0 ? largePieces : candidates;
+    }
+
     private float GetWeight(Vector2Int[] shape, List<Vector2Int[]> holes)
     {
-        float weight = shape.Length >= 5 ? bigPieceWeight : 1f;
+        float weight = weightLookup.TryGetValue(shape, out float shapeWeight) ? shapeWeight : 1f;
 
         if (FindHoleOrigin(shape, holes, out _))
         {
