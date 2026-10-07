@@ -1833,9 +1833,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Board
   cellPrefab: {fileID: 7685370036028465093, guid: f27996a8476293a4a9f8d433c1418051, type: 3}
   blockPrefab: {fileID: 9091310365549488599, guid: a503cdd883be14b4ea8170999cbec4f6, type: 3}
-  clearDuration: 0.3
+  clearDuration: 0.727
   clearPunchScale: 1.25
   clearStaggerDelay: 0.02
+  introDropDistance: 12
+  introCellDuration: 0.5
+  introRowDelay: 0.04
+  introColumnDelay: 0.015
+  introSfx: {fileID: 8300000, guid: 5274ed621526630448bcc355a66f53d5, type: 3}
 --- !u!4 &745718775
 Transform:
   m_ObjectHideFlags: 0
@@ -2682,7 +2687,7 @@ MonoBehaviour:
   guaranteeChance: 0
   bigPieceWeight: 10
   lineClearBias: 0.5
-  holeFitWeight: 50
+  holeFitWeight: 5
 --- !u!4 &1129377955
 Transform:
   m_ObjectHideFlags: 0

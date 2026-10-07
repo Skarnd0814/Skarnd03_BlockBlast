@@ -7,7 +7,8 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField] private DragController dragController;
     [SerializeField] private ScoreManager scoreManager;
-    [SerializeField] private float gameOverDelay = 0.8f;
+    [SerializeField] private Board board;
+    [SerializeField] private float popupDelay = 0.3f;
     [SerializeField] private string menuSceneName = "MenuScene";
 
     [Header("Game Over UI")]
@@ -49,7 +50,9 @@ public class GameManager : MonoBehaviour
 
         IsGameOver = true;
         dragController.enabled = false;
-        Invoke(nameof(ShowGameOverPopup), gameOverDelay);
+
+        float collapseDuration = board.PlayCollapse();
+        Invoke(nameof(ShowGameOverPopup), collapseDuration + popupDelay);
     }
 
     private void ShowGameOverPopup()

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -20,7 +21,18 @@ public class Board : MonoBehaviour
     [SerializeField] private float introColumnDelay = 0.015f;
     [SerializeField] private AudioClip introSfx;
 
+    [Header("Collapse Effect")]
+    [SerializeField] private float collapseStartDelay = 0.3f;
+    [SerializeField] private float collapseSpread = 0.5f;
+    [SerializeField] private float collapseFallDuration = 1.2f;
+    [SerializeField] private float collapseGravity = 35f;
+    [SerializeField] private float collapseJumpPower = 5f;
+    [SerializeField] private float collapseSideSpeed = 2f;
+    [SerializeField] private float collapseSpin = 360f;
+    [SerializeField] private AudioClip collapseSfx;
+
     private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size];
+    private Transform[] cellTransforms;
 
     public bool IsReady { get; private set; }
 
@@ -53,6 +65,7 @@ public class Board : MonoBehaviour
             }
         }
 
+        cellTransforms = cells;
         StartCoroutine(PlayIntro(cells, targets, delays));
     }
 
@@ -93,6 +106,71 @@ public class Board : MonoBehaviour
         const float overshoot = 1.70158f;
         float shifted = t - 1f;
         return 1f + (overshoot + 1f) * shifted * shifted * shifted + overshoot * shifted * shifted;
+    }
+
+    // 🆕 게임 오버 시 판 전체가 무너짐. 전체 소요 시간을 돌려줌
+    public float PlayCollapse()
+    {
+        List<Transform> targets = new List<Transform>(cellTransforms);
+
+        foreach (SpriteRenderer block in placedBlocks)
+        {
+            if (block != null)
+            {
+                targets.Add(block.transform);
+            }
+        }
+
+        StartCoroutine(Collapse(targets.ToArray()));
+        return collapseStartDelay + collapseSpread + collapseFallDuration;
+    }
+
+    private IEnumerator Collapse(Transform[] targets)
+    {
+        int count = targets.Length;
+        float[] delays = new float[count];
+        Vector3[] velocities = new Vector3[count];
+        float[] spins = new float[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            delays[i] = Random.Range(0f, collapseSpread);
+            velocities[i] = new Vector3(
+                Random.Range(-collapseSideSpeed, collapseSideSpeed),
+                Random.Range(collapseJumpPower * 0.5f, collapseJumpPower),
+                0f);
+            spins[i] = Random.Range(-collapseSpin, collapseSpin);
+        }
+
+        if (collapseStartDelay > 0f)
+        {
+            yield return new WaitForSeconds(collapseStartDelay);
+        }
+
+        SoundManager.Instance.PlaySFX(collapseSfx);
+
+        float totalDuration = collapseSpread + collapseFallDuration;
+        float elapsed = 0f;
+
+        while (elapsed < totalDuration)
+        {
+            float deltaTime = Time.deltaTime;
+            elapsed += deltaTime;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (elapsed < delays[i])
+                {
+                    continue;
+                }
+
+                velocities[i].y -= collapseGravity * deltaTime;
+                targets[i].position += velocities[i] * deltaTime;
+                targets[i].Rotate(0f, 0f, spins[i] * deltaTime);
+            }
+
+            yield return null;
+        }
     }
 
     public Vector3 GetCellPosition(int x, int y)
