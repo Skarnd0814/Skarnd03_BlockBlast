@@ -15,7 +15,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private AudioClip placeSfx;
     [SerializeField] private AudioClip failSfx;
     [SerializeField] private AudioClip lineClearSfx;
-    [SerializeField] private AudioClip comboSfx;
+    [SerializeField] private AudioClip[] multiLineClearSfx;
 
     private Piece draggingPiece;
 
@@ -80,7 +80,7 @@ public class DragController : MonoBehaviour
             if (lineCount > 0)
             {
                 scoreManager.AddLinePoints(lineCount);
-                SoundManager.Instance.PlaySFX(lineCount >= 2 ? comboSfx : lineClearSfx);
+                PlayLineClearSound(lineCount);
             }
 
             spawner.RemovePiece(draggingPiece);
@@ -92,5 +92,18 @@ public class DragController : MonoBehaviour
         }
 
         draggingPiece = null;
+    }
+
+    private void PlayLineClearSound(int lineCount)
+    {
+        if (lineCount >= 2 && multiLineClearSfx.Length > 0)
+        {
+            int index = Random.Range(0, multiLineClearSfx.Length);
+            SoundManager.Instance.PlaySFX(multiLineClearSfx[index]);
+        }
+        else
+        {
+            SoundManager.Instance.PlaySFX(lineClearSfx);
+        }
     }
 }
