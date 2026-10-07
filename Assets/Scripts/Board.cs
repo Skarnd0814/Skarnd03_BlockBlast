@@ -29,6 +29,7 @@ public class Board : MonoBehaviour
     [SerializeField] private float collapseJumpPower = 5f;
     [SerializeField] private float collapseSideSpeed = 2f;
     [SerializeField] private float collapseSpin = 360f;
+    [SerializeField] private int collapseSortingOrder = 30;
     [SerializeField] private AudioClip collapseSfx;
 
     [Header("Placement Preview")]
@@ -151,16 +152,31 @@ public class Board : MonoBehaviour
     {
         List<Transform> targets = new List<Transform>(cellTransforms);
 
+        // 떨어지는 칸이 트레이에 남은 블록보다 앞에 그려지도록 (놓인 블록은 빈 칸보다 한 단계 위)
+        foreach (Transform cell in cellTransforms)
+        {
+            SetSortingOrder(cell, collapseSortingOrder);
+        }
+
         foreach (SpriteRenderer block in placedBlocks)
         {
             if (block != null)
             {
+                block.sortingOrder = collapseSortingOrder + 1;
                 targets.Add(block.transform);
             }
         }
 
         StartCoroutine(Collapse(targets.ToArray()));
         return collapseStartDelay + collapseSpread + collapseFallDuration;
+    }
+
+    private void SetSortingOrder(Transform target, int order)
+    {
+        foreach (SpriteRenderer spriteRenderer in target.GetComponentsInChildren<SpriteRenderer>())
+        {
+            spriteRenderer.sortingOrder = order;
+        }
     }
 
     private IEnumerator Collapse(Transform[] targets)
