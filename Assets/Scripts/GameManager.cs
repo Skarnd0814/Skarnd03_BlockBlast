@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -16,6 +17,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text finalScoreText;
     [SerializeField] private TMP_Text finalBestText;
     [SerializeField] private GameObject newBestLabel;
+    [SerializeField] private float popupFadeDuration = 0.4f;
+    [SerializeField] private float popupSlideDistance = 80f;
 
     [Header("Pause UI")]
     [SerializeField] private GameObject pausePopup;
@@ -63,8 +66,50 @@ public class GameManager : MonoBehaviour
         finalBestText.text = $"BEST {scoreManager.BestScore}";
         newBestLabel.SetActive(isNewBest);
         gameOverPopup.SetActive(true);
+        StartCoroutine(AnimatePopupIn(gameOverPopup));
 
         SoundManager.Instance.PlaySFX(isNewBest ? newBestSfx : gameOverSfx);
+    }
+
+    // 팝업 전체를 페이드인하고, 안쪽 Panel은 살짝 아래에서 제자리로 올라오게 함
+    private IEnumerator AnimatePopupIn(GameObject popup)
+    {
+        CanvasGroup group = popup.GetComponent<CanvasGroup>();
+        if (group == null)
+        {
+            group = popup.AddComponent<CanvasGroup>();
+        }
+
+        RectTransform panel = popup.transform.Find("Panel") as RectTransform;
+        Vector2 endPosition = panel != null ? panel.anchoredPosition : Vector2.zero;
+        Vector2 startPosition = endPosition - new Vector2(0f, popupSlideDistance);
+
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = true;
+
+        float elapsed = 0f;
+
+        while (elapsed < popupFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float smooth = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / popupFadeDuration));
+
+            group.alpha = smooth;
+            if (panel != null)
+            {
+                panel.anchoredPosition = Vector2.Lerp(startPosition, endPosition, smooth);
+            }
+
+            yield return null;
+        }
+
+        group.alpha = 1f;
+        if (panel != null)
+        {
+            panel.anchoredPosition = endPosition;
+        }
+        group.interactable = true;
     }
 
     public void OnClickPause()

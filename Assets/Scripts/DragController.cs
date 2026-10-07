@@ -11,6 +11,11 @@ public class DragController : MonoBehaviour
     [SerializeField] private float pickRadius = 1.6f;
     [SerializeField] private float dragOffsetY = 1.5f;
 
+    [Header("Combo")]
+    [SerializeField] private ComboDisplay comboDisplay;
+    [Tooltip("줄을 지우지 못한 배치가 이 횟수만큼 연속되면 콤보가 끊김")]
+    [SerializeField] private int comboKeepMoves = 3;
+
     [Header("Sound")]
     [SerializeField] private AudioClip pickSfx;
     [SerializeField] private AudioClip placeSfx;
@@ -19,6 +24,8 @@ public class DragController : MonoBehaviour
     [SerializeField] private AudioClip[] multiLineClearSfx;
 
     private Piece draggingPiece;
+    private int combo;
+    private int movesWithoutClear;
 
     private void Update()
     {
@@ -124,6 +131,8 @@ public class DragController : MonoBehaviour
                 PlayLineClearSound(lineCount);
             }
 
+            UpdateCombo(lineCount);
+
             spawner.RemovePiece(draggingPiece);
             draggingPiece = null;
 
@@ -137,6 +146,30 @@ public class DragController : MonoBehaviour
             draggingPiece.ReturnToTray();
             SoundManager.Instance.PlaySFX(failSfx);
             draggingPiece = null;
+        }
+    }
+
+    // 줄을 지울 때마다 콤보 +1, 지우지 못한 배치가 comboKeepMoves번 연속되면 초기화
+    private void UpdateCombo(int lineCount)
+    {
+        if (lineCount > 0)
+        {
+            combo++;
+            movesWithoutClear = 0;
+
+            if (comboDisplay != null)
+            {
+                comboDisplay.Show(lineCount, combo);
+            }
+        }
+        else
+        {
+            movesWithoutClear++;
+
+            if (movesWithoutClear >= comboKeepMoves)
+            {
+                combo = 0;
+            }
         }
     }
 
