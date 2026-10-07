@@ -11,6 +11,8 @@ public class DragController : MonoBehaviour
     [SerializeField] private float pickRadius = 1.6f;
     [Tooltip("손가락과 들고 있는 블록의 '아래쪽 끝' 사이 간격 (유닛). 블록이 클수록 자동으로 더 위에 표시됨")]
     [SerializeField] private float dragOffsetY = 1.5f;
+    [Tooltip("손가락 이동량 대비 블록 이동량 배율. 1 = 손가락과 똑같이, 1.2 = 20% 더 많이 움직임 (손가락을 덜 움직여도 됨)")]
+    [SerializeField] private float dragSensitivity = 1f;
 
     [Header("Combo")]
     [SerializeField] private ComboDisplay comboDisplay;
@@ -25,6 +27,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private AudioClip[] multiLineClearSfx;
 
     private Piece draggingPiece;
+    private Vector3 pickPointerPosition;
     private int combo;
     private int movesWithoutClear;
 
@@ -109,6 +112,7 @@ public class DragController : MonoBehaviour
         }
 
         draggingPiece = piece;
+        pickPointerPosition = pointerWorld;
         draggingPiece.BeginDrag();
         MoveDraggingPiece(pointerWorld);
         SoundManager.Instance.PlaySFX(pickSfx);
@@ -117,8 +121,9 @@ public class DragController : MonoBehaviour
     // 블록의 아래쪽 끝이 손가락보다 dragOffsetY만큼 위에 오도록 배치 (세로로 긴 블록도 가려지지 않음)
     private void MoveDraggingPiece(Vector3 pointerWorld)
     {
+        Vector3 movedPointer = pickPointerPosition + (pointerWorld - pickPointerPosition) * dragSensitivity;
         float halfHeight = draggingPiece.Center.y + 0.5f;
-        draggingPiece.transform.position = pointerWorld + new Vector3(0f, dragOffsetY + halfHeight, 0f);
+        draggingPiece.transform.position = movedPointer + new Vector3(0f, dragOffsetY + halfHeight, 0f);
     }
 
     private void Drop()
