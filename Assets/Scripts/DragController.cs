@@ -43,6 +43,15 @@ public class DragController : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        if (draggingPiece != null)
+        {
+            draggingPiece.ReturnToTray();
+            draggingPiece = null;
+        }
+    }
+
     private Vector3 GetPointerWorldPosition()
     {
         Vector2 screenPosition = Pointer.current.position.ReadValue();
