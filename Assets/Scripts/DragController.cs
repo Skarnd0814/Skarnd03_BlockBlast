@@ -9,6 +9,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private float pickRadius = 1.6f;
+    [Tooltip("손가락과 들고 있는 블록의 '아래쪽 끝' 사이 간격 (유닛). 블록이 클수록 자동으로 더 위에 표시됨")]
     [SerializeField] private float dragOffsetY = 1.5f;
 
     [Header("Combo")]
@@ -46,7 +47,7 @@ public class DragController : MonoBehaviour
         }
         else if (draggingPiece != null && Pointer.current.press.isPressed)
         {
-            draggingPiece.transform.position = pointerWorld + new Vector3(0f, dragOffsetY, 0f);
+            MoveDraggingPiece(pointerWorld);
             UpdatePreview();
         }
     }
@@ -109,7 +110,15 @@ public class DragController : MonoBehaviour
 
         draggingPiece = piece;
         draggingPiece.BeginDrag();
+        MoveDraggingPiece(pointerWorld);
         SoundManager.Instance.PlaySFX(pickSfx);
+    }
+
+    // 블록의 아래쪽 끝이 손가락보다 dragOffsetY만큼 위에 오도록 배치 (세로로 긴 블록도 가려지지 않음)
+    private void MoveDraggingPiece(Vector3 pointerWorld)
+    {
+        float halfHeight = draggingPiece.Center.y + 0.5f;
+        draggingPiece.transform.position = pointerWorld + new Vector3(0f, dragOffsetY + halfHeight, 0f);
     }
 
     private void Drop()
