@@ -8,6 +8,8 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private TMP_Text bestScoreText;
     [SerializeField] private int pointsPerBlock = 100;
     [SerializeField] private int pointsPerLine = 1000;
+    [Tooltip("콤보 1 증가당 줄 삭제 점수 추가 배율 (0.5 = 콤보 2에서 x1.5, 콤보 3에서 x2.0)")]
+    [SerializeField] private float comboBonusRate = 0.5f;
 
     [Header("Animation")]
     [SerializeField] private float countDuration = 0.4f;
@@ -37,9 +39,15 @@ public class ScoreManager : MonoBehaviour
         AddScore(pointsPerBlock * blockCount);
     }
 
-    public void AddLinePoints(int lineCount)
+    public void AddLinePoints(int lineCount, int combo = 1)
     {
-        AddScore(pointsPerLine * lineCount * lineCount);
+        int basePoints = pointsPerLine * lineCount * lineCount;
+        AddScore(Mathf.RoundToInt(basePoints * GetComboMultiplier(combo)));
+    }
+
+    public float GetComboMultiplier(int combo)
+    {
+        return 1f + Mathf.Max(0, combo - 1) * comboBonusRate;
     }
 
     public bool SaveBestScore()

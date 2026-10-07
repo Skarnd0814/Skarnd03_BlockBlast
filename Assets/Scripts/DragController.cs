@@ -125,13 +125,13 @@ public class DragController : MonoBehaviour
             scoreManager.AddPlacePoints(draggingPiece.Cells.Length);
 
             int lineCount = board.ClearFullLines();
+            UpdateCombo(lineCount);
+
             if (lineCount > 0)
             {
-                scoreManager.AddLinePoints(lineCount);
+                scoreManager.AddLinePoints(lineCount, combo);
                 PlayLineClearSound(lineCount);
             }
-
-            UpdateCombo(lineCount);
 
             spawner.RemovePiece(draggingPiece);
             draggingPiece = null;

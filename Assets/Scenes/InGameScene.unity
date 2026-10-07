@@ -3598,6 +3598,7 @@ MonoBehaviour:
   bestScoreText: {fileID: 636960759}
   pointsPerBlock: 1
   pointsPerLine: 1000
+  comboBonusRate: 1
   countDuration: 0.4
   punchScale: 1.3
   punchDuration: 0.25
