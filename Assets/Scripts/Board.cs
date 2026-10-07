@@ -13,7 +13,16 @@ public class Board : MonoBehaviour
     [SerializeField] private float clearPunchScale = 1.25f;
     [SerializeField] private float clearStaggerDelay = 0.02f;
 
+    [Header("Intro Effect")]
+    [SerializeField] private float introDropDistance = 12f;
+    [SerializeField] private float introCellDuration = 0.35f;
+    [SerializeField] private float introRowDelay = 0.04f;
+    [SerializeField] private float introColumnDelay = 0.015f;
+    [SerializeField] private AudioClip introSfx;
+
     private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size];
+
+    public bool IsReady { get; private set; }
 
     private void Start()
     {
@@ -22,15 +31,68 @@ public class Board : MonoBehaviour
 
     private void CreateCells()
     {
+        int count = Size * Size;
+        Transform[] cells = new Transform[count];
+        Vector3[] targets = new Vector3[count];
+        float[] delays = new float[count];
+        Vector3 dropOffset = new Vector3(0f, introDropDistance, 0f);
+        int index = 0;
+
         for (int y = 0; y < Size; y++)
         {
             for (int x = 0; x < Size; x++)
             {
-                Vector3 position = GetCellPosition(x, y);
-                GameObject cell = Instantiate(cellPrefab, position, Quaternion.identity, transform);
+                Vector3 target = GetCellPosition(x, y);
+                GameObject cell = Instantiate(cellPrefab, target - dropOffset, Quaternion.identity, transform);
                 cell.name = $"Cell_{x}_{y}";
+
+                cells[index] = cell.transform;
+                targets[index] = target;
+                delays[index] = y * introRowDelay + x * introColumnDelay;
+                index++;
             }
         }
+
+        StartCoroutine(PlayIntro(cells, targets, delays));
+    }
+
+    private IEnumerator PlayIntro(Transform[] cells, Vector3[] targets, float[] delays)
+    {
+        IsReady = false;
+        SoundManager.Instance.PlaySFX(introSfx);
+
+        Vector3 dropOffset = new Vector3(0f, introDropDistance, 0f);
+        float maxDelay = (Size - 1) * (introRowDelay + introColumnDelay);
+        float totalDuration = maxDelay + introCellDuration;
+        float elapsed = 0f;
+
+        while (elapsed < totalDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                float progress = Mathf.Clamp01((elapsed - delays[i]) / introCellDuration);
+                float eased = EaseOutBack(progress);
+                cells[i].position = Vector3.LerpUnclamped(targets[i] - dropOffset, targets[i], eased);
+            }
+
+            yield return null;
+        }
+
+        for (int i = 0; i < cells.Length; i++)
+        {
+            cells[i].position = targets[i];
+        }
+
+        IsReady = true;
+    }
+
+    private float EaseOutBack(float t)
+    {
+        const float overshoot = 1.70158f;
+        float shifted = t - 1f;
+        return 1f + (overshoot + 1f) * shifted * shifted * shifted + overshoot * shifted * shifted;
     }
 
     public Vector3 GetCellPosition(int x, int y)

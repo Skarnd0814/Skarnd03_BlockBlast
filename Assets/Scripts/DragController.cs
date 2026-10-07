@@ -62,6 +62,11 @@ public class DragController : MonoBehaviour
 
     private void TryPickUp(Vector3 pointerWorld)
     {
+        if (!board.IsReady)
+        {
+            return;
+        }
+
         Piece piece = spawner.GetPieceAt(pointerWorld, pickRadius);
 
         if (piece == null)
