@@ -4478,6 +4478,7 @@ MonoBehaviour:
   gameManager: {fileID: 315875942}
   pickRadius: 1.6
   dragOffsetY: 3
+  dragSensitivity: 1.2
   comboDisplay: {fileID: 1345902978}
   comboKeepMoves: 3
   pickSfx: {fileID: 8300000, guid: 55855799992b3ea468558927394606a5, type: 3}
