@@ -5,7 +5,8 @@ public class ScoreManager : MonoBehaviour
 {
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text bestScoreText;
-    [SerializeField] private int pointsPerLine = 10;
+    [SerializeField] private int pointsPerBlock = 100;
+    [SerializeField] private int pointsPerLine = 1000;
 
     private const string BestScoreKey = "BestScore";
 
@@ -24,7 +25,7 @@ public class ScoreManager : MonoBehaviour
 
     public void AddPlacePoints(int blockCount)
     {
-        Score += blockCount;
+        Score += pointsPerBlock * blockCount;
         UpdateScoreText();
     }
 
