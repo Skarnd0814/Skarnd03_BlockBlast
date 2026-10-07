@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,7 +18,13 @@ public class PieceSpawner : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float lineClearBias = 0.5f;
     [SerializeField] private float holeFitWeight = 5f;
 
+    [Header("Spawn Effect")]
+    [SerializeField] private float spawnDuration = 0.3f;
+    [SerializeField] private float spawnStagger = 0.08f;
+    [SerializeField] private AudioClip spawnSfx;
+
     private Piece[] pieces;
+    private bool isSpawnAnimating;
 
     private void Start()
     {
@@ -37,10 +44,63 @@ public class PieceSpawner : MonoBehaviour
             Color color = colors[Random.Range(0, colors.Length)];
             piece.Setup(shapes[i], color);
 
-            piece.transform.localScale = Vector3.one * trayScale;
+            piece.transform.localScale = Vector3.zero;
 
             pieces[i] = piece;
         }
+
+        StartCoroutine(AnimateSpawn());
+    }
+
+    // 왼쪽부터 차례로 톡 튀어나오며 트레이 크기까지 커짐 (게임 시작 시에는 판 채우기가 끝난 뒤 등장)
+    private IEnumerator AnimateSpawn()
+    {
+        isSpawnAnimating = true;
+
+        if (!board.IsReady)
+        {
+            yield return new WaitUntil(() => board.IsReady);
+        }
+
+        SoundManager.Instance.PlaySFX(spawnSfx);
+
+        float totalDuration = spawnStagger * (pieces.Length - 1) + spawnDuration;
+        float elapsed = 0f;
+
+        while (elapsed < totalDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            for (int i = 0; i < pieces.Length; i++)
+            {
+                if (pieces[i] == null)
+                {
+                    continue;
+                }
+
+                float progress = Mathf.Clamp01((elapsed - i * spawnStagger) / spawnDuration);
+                pieces[i].transform.localScale = Vector3.one * (trayScale * EaseOutBack(progress));
+            }
+
+            yield return null;
+        }
+
+        foreach (Piece piece in pieces)
+        {
+            if (piece != null)
+            {
+                piece.transform.localScale = Vector3.one * trayScale;
+            }
+        }
+
+        isSpawnAnimating = false;
+    }
+
+    private float EaseOutBack(float t)
+    {
+        const float overshoot = 1.70158f;
+        float shifted = t - 1f;
+        return 1f + (overshoot + 1f) * shifted * shifted * shifted + overshoot * shifted * shifted;
     }
 
     private Vector2Int[][] ChooseShapes()
@@ -186,6 +246,11 @@ public class PieceSpawner : MonoBehaviour
 
     public Piece GetPieceAt(Vector3 worldPosition, float radius)
     {
+        if (isSpawnAnimating)
+        {
+            return null;
+        }
+
         for (int i = 0; i < pieces.Length; i++)
         {
             if (pieces[i] == null)
