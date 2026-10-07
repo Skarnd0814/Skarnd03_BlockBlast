@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class PlacementSolver
@@ -38,59 +39,28 @@ public static class PlacementSolver
         return false;
     }
 
-    public static bool CanPlaceAll(bool[,] grid, Vector2Int[][] shapes)
+    public static List<Vector2Int> GetAllPlacements(bool[,] grid, Vector2Int[] shape)
     {
-        bool[] used = new bool[shapes.Length];
-        return CanPlaceRemaining(grid, shapes, used, 0);
-    }
-
-    private static bool CanPlaceRemaining(bool[,] grid, Vector2Int[][] shapes, bool[] used, int placedCount)
-    {
-        if (placedCount == shapes.Length)
-        {
-            return true;
-        }
-
+        List<Vector2Int> placements = new List<Vector2Int>();
         int size = grid.GetLength(0);
 
-        for (int i = 0; i < shapes.Length; i++)
+        for (int y = 0; y < size; y++)
         {
-            if (used[i])
+            for (int x = 0; x < size; x++)
             {
-                continue;
-            }
+                Vector2Int origin = new Vector2Int(x, y);
 
-            used[i] = true;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
+                if (CanPlace(grid, shape, origin))
                 {
-                    Vector2Int origin = new Vector2Int(x, y);
-
-                    if (!CanPlace(grid, shapes[i], origin))
-                    {
-                        continue;
-                    }
-
-                    bool[,] nextGrid = (bool[,])grid.Clone();
-                    PlaceAndClear(nextGrid, shapes[i], origin);
-
-                    if (CanPlaceRemaining(nextGrid, shapes, used, placedCount + 1))
-                    {
-                        used[i] = false;
-                        return true;
-                    }
+                    placements.Add(origin);
                 }
             }
-
-            used[i] = false;
         }
 
-        return false;
+        return placements;
     }
 
-    private static void PlaceAndClear(bool[,] grid, Vector2Int[] shape, Vector2Int origin)
+    public static int PlaceAndClear(bool[,] grid, Vector2Int[] shape, Vector2Int origin)
     {
         int size = grid.GetLength(0);
 
@@ -101,6 +71,7 @@ public static class PlacementSolver
 
         bool[] fullRows = new bool[size];
         bool[] fullColumns = new bool[size];
+        int lineCount = 0;
 
         for (int i = 0; i < size; i++)
         {
@@ -119,6 +90,16 @@ public static class PlacementSolver
                     fullColumns[i] = false;
                 }
             }
+
+            if (fullRows[i])
+            {
+                lineCount++;
+            }
+
+            if (fullColumns[i])
+            {
+                lineCount++;
+            }
         }
 
         for (int y = 0; y < size; y++)
@@ -131,5 +112,7 @@ public static class PlacementSolver
                 }
             }
         }
+
+        return lineCount;
     }
 }
