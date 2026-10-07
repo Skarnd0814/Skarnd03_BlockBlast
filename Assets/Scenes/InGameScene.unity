@@ -2843,6 +2843,9 @@ MonoBehaviour:
   bigPieceWeight: 5
   lineClearBias: 0.5
   holeFitWeight: 5
+  spawnDuration: 0.3
+  spawnStagger: 0.08
+  spawnSfx: {fileID: 8300000, guid: b548e4137e6787248b24a7f2a360a673, type: 3}
 --- !u!4 &1129377955
 Transform:
   m_ObjectHideFlags: 0
@@ -4147,6 +4150,7 @@ GameObject:
   - component: {fileID: 1766411145}
   - component: {fileID: 1766411144}
   - component: {fileID: 1766411147}
+  - component: {fileID: 1766411148}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4272,6 +4276,21 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &1766411148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1766411143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f035590a6e1faf44b11cba1922221c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraFitter
+  minVisibleWidth: 9.6
+  minVisibleHeight: 17
+  background: {fileID: 763375947}
 --- !u!1 &1773376589
 GameObject:
   m_ObjectHideFlags: 0
