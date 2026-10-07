@@ -79,4 +79,80 @@ public class Board : MonoBehaviour
             placedBlocks[target.x, target.y] = block;
         }
     }
+    // 🆕 꽉 찬 줄을 모두 지우고, 지운 줄 수를 돌려줌
+    
+    public int ClearFullLines()
+    {
+        bool[] fullRows = new bool[Size];
+        bool[] fullColumns = new bool[Size];
+        int lineCount = 0;
+
+        for (int i = 0; i < Size; i++)
+        {
+            if (IsRowFull(i))
+            {
+                fullRows[i] = true;
+                lineCount++;
+            }
+
+            if (IsColumnFull(i))
+            {
+                fullColumns[i] = true;
+                lineCount++;
+            }
+        }
+
+        for (int y = 0; y < Size; y++)
+        {
+            for (int x = 0; x < Size; x++)
+            {
+                if (fullRows[y] || fullColumns[x])
+                {
+                    RemoveBlock(x, y);
+                }
+            }
+        }
+
+        return lineCount;
+    }
+
+    // 🆕 가로줄(y)이 꽉 찼는지
+    private bool IsRowFull(int y)
+    {
+        for (int x = 0; x < Size; x++)
+        {
+            if (placedBlocks[x, y] == null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // 🆕 세로줄(x)이 꽉 찼는지
+    private bool IsColumnFull(int x)
+    {
+        for (int y = 0; y < Size; y++)
+        {
+            if (placedBlocks[x, y] == null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // 🆕 한 칸의 블록 삭제
+    private void RemoveBlock(int x, int y)
+    {
+        if (placedBlocks[x, y] == null)
+        {
+            return;
+        }
+
+        Destroy(placedBlocks[x, y].gameObject);
+        placedBlocks[x, y] = null;
+    }
 }

@@ -6,6 +6,7 @@ public class DragController : MonoBehaviour
     [SerializeField] private Camera mainCamera;
     [SerializeField] private Board board;
     [SerializeField] private PieceSpawner spawner;
+    [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private float pickRadius = 1.6f;
     [SerializeField] private float dragOffsetY = 1.5f;
 
@@ -13,6 +14,8 @@ public class DragController : MonoBehaviour
     [SerializeField] private AudioClip pickSfx;
     [SerializeField] private AudioClip placeSfx;
     [SerializeField] private AudioClip failSfx;
+    [SerializeField] private AudioClip lineClearSfx;
+    [SerializeField] private AudioClip comboSfx;
 
     private Piece draggingPiece;
 
@@ -69,8 +72,18 @@ public class DragController : MonoBehaviour
         if (board.CanPlace(draggingPiece.Cells, origin))
         {
             board.Place(draggingPiece.Cells, origin, draggingPiece.Color);
-            spawner.RemovePiece(draggingPiece);
             SoundManager.Instance.PlaySFX(placeSfx);
+
+            scoreManager.AddPlacePoints(draggingPiece.Cells.Length);
+
+            int lineCount = board.ClearFullLines();
+            if (lineCount > 0)
+            {
+                scoreManager.AddLinePoints(lineCount);
+                SoundManager.Instance.PlaySFX(lineCount >= 2 ? comboSfx : lineClearSfx);
+            }
+
+            spawner.RemovePiece(draggingPiece);
         }
         else
         {
