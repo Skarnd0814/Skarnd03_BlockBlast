@@ -2840,9 +2840,61 @@ MonoBehaviour:
   - {r: 0.22745098, g: 0.24705882, b: 0.29411766, a: 1}
   trayScale: 0.55
   guaranteeChance: 1
-  bigPieceWeight: 5
   lineClearBias: 0.5
   holeFitWeight: 5
+  smallPiecesOnlyWhenNeeded: 1
+  smallPieceMaxCells: 3
+  shapeWeights:
+  - name: "1\uCE78"
+    weight: 1
+  - name: "\uAC00\uB85C 2\uCE78"
+    weight: 1
+  - name: "\uAC00\uB85C 3\uCE78"
+    weight: 1
+  - name: "\uAC00\uB85C 4\uCE78 (1x4)"
+    weight: 3
+  - name: "\uAC00\uB85C 5\uCE78 (1x5)"
+    weight: 3
+  - name: "\uC138\uB85C 2\uCE78"
+    weight: 1
+  - name: "\uC138\uB85C 3\uCE78"
+    weight: 1
+  - name: "\uC138\uB85C 4\uCE78 (4x1)"
+    weight: 3
+  - name: "\uC138\uB85C 5\uCE78 (5x1)"
+    weight: 3
+  - name: "\uB124\uBAA8 2x2"
+    weight: 2
+  - name: "\uB124\uBAA8 3x3"
+    weight: 3
+  - name: "\uC9C1\uC0AC\uAC01\uD615 2x3"
+    weight: 3
+  - name: "\uC9C1\uC0AC\uAC01\uD615 3x2"
+    weight: 3
+  - name: "\uC791\uC740 L \u2517"
+    weight: 1
+  - name: "\uC791\uC740 L \u251B"
+    weight: 1
+  - name: "\uC791\uC740 L \u250F"
+    weight: 1
+  - name: "\uC791\uC740 L \u2513"
+    weight: 1
+  - name: "L \u2517 (\uC138\uB85C)"
+    weight: 1.5
+  - name: "L \u251B (\uC138\uB85C)"
+    weight: 1.5
+  - name: "L \u2501\u251B (\uAC00\uB85C)"
+    weight: 1.5
+  - name: "L \u250F\u2501 (\uAC00\uB85C)"
+    weight: 1.5
+  - name: "T \u253B"
+    weight: 1.5
+  - name: "T \u2533"
+    weight: 1.5
+  - name: S
+    weight: 1.5
+  - name: Z
+    weight: 1.5
   spawnDuration: 0.3
   spawnStagger: 0.08
   spawnSfx: {fileID: 8300000, guid: b548e4137e6787248b24a7f2a360a673, type: 3}
