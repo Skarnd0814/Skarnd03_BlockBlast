@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PieceSpawner : MonoBehaviour
 {
+    private const int MaxHoleSize = 9;
+
     [SerializeField] private Board board;
     [SerializeField] private Piece piecePrefab;
     [SerializeField] private Transform[] spawnPoints;
@@ -13,6 +15,7 @@ public class PieceSpawner : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float guaranteeChance = 1f;
     [SerializeField] private float bigPieceWeight = 1f;
     [SerializeField, Range(0f, 1f)] private float lineClearBias = 0.5f;
+    [SerializeField] private float holeFitWeight = 5f;
 
     private Piece[] pieces;
 
@@ -44,21 +47,23 @@ public class PieceSpawner : MonoBehaviour
     {
         Vector2Int[][] shapes = new Vector2Int[spawnPoints.Length][];
         List<Vector2Int[]> allShapes = new List<Vector2Int[]>(BlockShapes.All);
+        bool[,] grid = board.GetOccupancy();
 
         if (Random.value >= guaranteeChance)
         {
+            List<Vector2Int[]> holes = PlacementSolver.FindEmptyRegions(grid, MaxHoleSize);
+
             for (int i = 0; i < shapes.Length; i++)
             {
-                shapes[i] = PickWeighted(allShapes);
+                shapes[i] = PickWeighted(allShapes, holes);
             }
 
             return shapes;
         }
 
-        bool[,] grid = board.GetOccupancy();
-
         for (int i = 0; i < shapes.Length; i++)
         {
+            List<Vector2Int[]> holes = PlacementSolver.FindEmptyRegions(grid, MaxHoleSize);
             List<Vector2Int[]> candidates = new List<Vector2Int[]>();
 
             foreach (Vector2Int[] shape in BlockShapes.All)
@@ -71,14 +76,14 @@ public class PieceSpawner : MonoBehaviour
 
             if (candidates.Count == 0)
             {
-                shapes[i] = PickWeighted(allShapes);
+                shapes[i] = PickWeighted(allShapes, holes);
                 continue;
             }
 
-            Vector2Int[] chosen = PickWeighted(candidates);
+            Vector2Int[] chosen = PickWeighted(candidates, holes);
             shapes[i] = chosen;
 
-            Vector2Int origin = ChoosePlacement(grid, chosen);
+            Vector2Int origin = ChoosePlacement(grid, chosen, holes);
             PlacementSolver.PlaceAndClear(grid, chosen, origin);
         }
 
@@ -86,8 +91,13 @@ public class PieceSpawner : MonoBehaviour
         return shapes;
     }
 
-    private Vector2Int ChoosePlacement(bool[,] grid, Vector2Int[] shape)
+    private Vector2Int ChoosePlacement(bool[,] grid, Vector2Int[] shape, List<Vector2Int[]> holes)
     {
+        if (FindHoleOrigin(shape, holes, out Vector2Int holeOrigin))
+        {
+            return holeOrigin;
+        }
+
         List<Vector2Int> placements = PlacementSolver.GetAllPlacements(grid, shape);
 
         if (Random.value < lineClearBias)
@@ -113,20 +123,34 @@ public class PieceSpawner : MonoBehaviour
         return placements[Random.Range(0, placements.Count)];
     }
 
-    private Vector2Int[] PickWeighted(List<Vector2Int[]> candidates)
+    private bool FindHoleOrigin(Vector2Int[] shape, List<Vector2Int[]> holes, out Vector2Int origin)
+    {
+        foreach (Vector2Int[] hole in holes)
+        {
+            if (PlacementSolver.TryMatchRegion(hole, shape, out origin))
+            {
+                return true;
+            }
+        }
+
+        origin = Vector2Int.zero;
+        return false;
+    }
+
+    private Vector2Int[] PickWeighted(List<Vector2Int[]> candidates, List<Vector2Int[]> holes)
     {
         float totalWeight = 0f;
 
         foreach (Vector2Int[] shape in candidates)
         {
-            totalWeight += GetWeight(shape);
+            totalWeight += GetWeight(shape, holes);
         }
 
         float pick = Random.Range(0f, totalWeight);
 
         foreach (Vector2Int[] shape in candidates)
         {
-            pick -= GetWeight(shape);
+            pick -= GetWeight(shape, holes);
 
             if (pick <= 0f)
             {
@@ -137,9 +161,16 @@ public class PieceSpawner : MonoBehaviour
         return candidates[candidates.Count - 1];
     }
 
-    private float GetWeight(Vector2Int[] shape)
+    private float GetWeight(Vector2Int[] shape, List<Vector2Int[]> holes)
     {
-        return shape.Length >= 5 ? bigPieceWeight : 1f;
+        float weight = shape.Length >= 5 ? bigPieceWeight : 1f;
+
+        if (FindHoleOrigin(shape, holes, out _))
+        {
+            weight *= holeFitWeight;
+        }
+
+        return weight;
     }
 
     private void Shuffle(Vector2Int[][] shapes)

@@ -2682,6 +2682,7 @@ MonoBehaviour:
   guaranteeChance: 0
   bigPieceWeight: 10
   lineClearBias: 0.5
+  holeFitWeight: 50
 --- !u!4 &1129377955
 Transform:
   m_ObjectHideFlags: 0
