@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-public class TitleManage : MonoBehaviour
+public class TitleManager : MonoBehaviour
 {
     [SerializeField] private TMP_Text touchText;
     [SerializeField] private float blinkSpeed = 1.5f;
