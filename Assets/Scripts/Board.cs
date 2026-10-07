@@ -5,6 +5,9 @@ public class Board : MonoBehaviour
     public const int Size = 8;
 
     [SerializeField] private GameObject cellPrefab;
+    [SerializeField] private SpriteRenderer blockPrefab;                   // 🆕
+
+    private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size]; // 🆕
 
     private void Start()
     {
@@ -28,5 +31,52 @@ public class Board : MonoBehaviour
     {
         float offset = (Size - 1) / 2f;
         return transform.position + new Vector3(x - offset, y - offset, 0f);
+    }
+
+    // 🆕 월드 위치 → 칸 번호
+    public Vector2Int WorldToCell(Vector3 worldPosition)
+    {
+        float offset = (Size - 1) / 2f;
+        Vector3 local = worldPosition - transform.position;
+        int x = Mathf.RoundToInt(local.x + offset);
+        int y = Mathf.RoundToInt(local.y + offset);
+        return new Vector2Int(x, y);
+    }
+
+    // 🆕 칸 번호가 판 안쪽인지
+    public bool IsInside(Vector2Int cell)
+    {
+        return cell.x >= 0 && cell.x < Size && cell.y >= 0 && cell.y < Size;
+    }
+
+    // 🆕 이 모양을 이 위치에 놓을 수 있는지
+    public bool CanPlace(Vector2Int[] shape, Vector2Int origin)
+    {
+        foreach (Vector2Int cell in shape)
+        {
+            Vector2Int target = origin + cell;
+
+            if (!IsInside(target) || placedBlocks[target.x, target.y] != null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // 🆕 판에 블록 고정하기
+    public void Place(Vector2Int[] shape, Vector2Int origin, Color color)
+    {
+        foreach (Vector2Int cell in shape)
+        {
+            Vector2Int target = origin + cell;
+            Vector3 position = GetCellPosition(target.x, target.y);
+
+            SpriteRenderer block = Instantiate(blockPrefab, position, Quaternion.identity, transform);
+            block.color = color;
+
+            placedBlocks[target.x, target.y] = block;
+        }
     }
 }

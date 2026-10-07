@@ -6,19 +6,46 @@ public class Piece : MonoBehaviour
 
     public Vector2Int[] Cells { get; private set; }
     public Color Color { get; private set; }
+    public Vector2 Center { get; private set; }   // 🆕
+
+    private Vector3 trayScale;                    // 🆕
 
     public void Setup(Vector2Int[] shape, Color color)
     {
         Cells = shape;
         Color = color;
-
-        Vector2 center = GetCenter();
+        Center = GetCenter();                     // 🆕 (변수 → 속성으로 저장)
 
         foreach (Vector2Int cell in Cells)
         {
             SpriteRenderer block = Instantiate(blockPrefab, transform);
-            block.transform.localPosition = new Vector3(cell.x - center.x, cell.y - center.y, 0f);
+            block.transform.localPosition = new Vector3(cell.x - Center.x, cell.y - Center.y, 0f);
             block.color = color;
+        }
+    }
+
+    // 🆕 집었을 때
+    public void BeginDrag()
+    {
+        trayScale = transform.localScale;
+        transform.localScale = Vector3.one;
+        SetSortingOrder(20);
+    }
+
+    // 🆕 트레이로 돌아갈 때
+    public void ReturnToTray()
+    {
+        transform.localPosition = Vector3.zero;
+        transform.localScale = trayScale;
+        SetSortingOrder(10);
+    }
+
+    // 🆕 모든 블록의 그리는 순서 바꾸기
+    private void SetSortingOrder(int order)
+    {
+        foreach (SpriteRenderer block in GetComponentsInChildren<SpriteRenderer>())
+        {
+            block.sortingOrder = order;
         }
     }
 
