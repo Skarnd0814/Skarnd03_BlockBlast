@@ -35,15 +35,48 @@ public class Board : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float previewAlpha = 0.4f;
     [SerializeField] private int previewSortingOrder = 5;
 
+    [Header("Line Highlight")]
+    [SerializeField] private float highlightPulseSpeed = 8f;
+    [SerializeField, Range(0f, 1f)] private float highlightPulseStrength = 0.35f;
+    [SerializeField] private bool recolorClearedLines = true;
+
     private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size];
+    private Color[,] placedColors = new Color[Size, Size];
     private Transform[] cellTransforms;
     private readonly List<SpriteRenderer> previewBlocks = new List<SpriteRenderer>();
+    private readonly List<Vector2Int> highlightedCells = new List<Vector2Int>();
+
+    private bool isPreviewVisible;
+    private Vector2Int[] lastPreviewShape;
+    private Vector2Int lastPreviewOrigin;
+    private Color highlightColor;
+    private Color lastPlacedColor = Color.white;
 
     public bool IsReady { get; private set; }
 
     private void Start()
     {
         CreateCells();
+    }
+
+    private void Update()
+    {
+        if (highlightedCells.Count == 0)
+        {
+            return;
+        }
+
+        Color pulseColor = GetPulseColor();
+
+        foreach (Vector2Int cell in highlightedCells)
+        {
+            SpriteRenderer block = placedBlocks[cell.x, cell.y];
+
+            if (block != null)
+            {
+                block.color = pulseColor;
+            }
+        }
     }
 
     private void CreateCells()
@@ -224,12 +257,26 @@ public class Board : MonoBehaviour
             block.color = color;
 
             placedBlocks[target.x, target.y] = block;
+            placedColors[target.x, target.y] = color;
         }
+
+        lastPlacedColor = color;
     }
 
-    // 드래그 중인 블록이 놓일 칸을 반투명하게 표시
+    // 드래그 중인 블록이 놓일 칸을 반투명하게 표시하고, 완성될 줄을 하이라이트
     public void ShowPreview(Vector2Int[] shape, Vector2Int origin, Color color)
     {
+        if (isPreviewVisible && shape == lastPreviewShape && origin == lastPreviewOrigin)
+        {
+            return;
+        }
+
+        isPreviewVisible = true;
+        lastPreviewShape = shape;
+        lastPreviewOrigin = origin;
+
+        UpdateLineHighlight(shape, origin, color);
+
         color.a = previewAlpha;
 
         for (int i = 0; i < shape.Length; i++)
@@ -257,6 +304,9 @@ public class Board : MonoBehaviour
 
     public void HidePreview()
     {
+        isPreviewVisible = false;
+        ClearLineHighlight();
+
         foreach (SpriteRenderer preview in previewBlocks)
         {
             if (preview != null)
@@ -264,6 +314,86 @@ public class Board : MonoBehaviour
                 preview.gameObject.SetActive(false);
             }
         }
+    }
+
+    // 이 위치에 놓으면 완성될 줄의 블록들을 드래그 중인 블록 색으로 바꿔 깜빡임
+    private void UpdateLineHighlight(Vector2Int[] shape, Vector2Int origin, Color color)
+    {
+        ClearLineHighlight();
+
+        bool[,] grid = GetOccupancy();
+
+        foreach (Vector2Int cell in shape)
+        {
+            grid[origin.x + cell.x, origin.y + cell.y] = true;
+        }
+
+        bool[] fullRows = new bool[Size];
+        bool[] fullColumns = new bool[Size];
+        bool anyLine = false;
+
+        for (int i = 0; i < Size; i++)
+        {
+            fullRows[i] = true;
+            fullColumns[i] = true;
+
+            for (int j = 0; j < Size; j++)
+            {
+                if (!grid[j, i])
+                {
+                    fullRows[i] = false;
+                }
+
+                if (!grid[i, j])
+                {
+                    fullColumns[i] = false;
+                }
+            }
+
+            anyLine |= fullRows[i] || fullColumns[i];
+        }
+
+        if (!anyLine)
+        {
+            return;
+        }
+
+        color.a = 1f;
+        highlightColor = color;
+        Color pulseColor = GetPulseColor();
+
+        for (int y = 0; y < Size; y++)
+        {
+            for (int x = 0; x < Size; x++)
+            {
+                if ((fullRows[y] || fullColumns[x]) && placedBlocks[x, y] != null)
+                {
+                    highlightedCells.Add(new Vector2Int(x, y));
+                    placedBlocks[x, y].color = pulseColor;
+                }
+            }
+        }
+    }
+
+    private void ClearLineHighlight()
+    {
+        foreach (Vector2Int cell in highlightedCells)
+        {
+            SpriteRenderer block = placedBlocks[cell.x, cell.y];
+
+            if (block != null)
+            {
+                block.color = placedColors[cell.x, cell.y];
+            }
+        }
+
+        highlightedCells.Clear();
+    }
+
+    private Color GetPulseColor()
+    {
+        float pulse = (Mathf.Sin(Time.time * highlightPulseSpeed) + 1f) * 0.5f;
+        return Color.Lerp(highlightColor, Color.white, pulse * highlightPulseStrength);
     }
 
     public int ClearFullLines()
@@ -352,6 +482,11 @@ public class Board : MonoBehaviour
         }
 
         placedBlocks[x, y] = null;
+
+        if (recolorClearedLines)
+        {
+            block.color = lastPlacedColor;
+        }
 
         float delay = (x + y) * clearStaggerDelay;
         StartCoroutine(AnimateClear(block, delay));
