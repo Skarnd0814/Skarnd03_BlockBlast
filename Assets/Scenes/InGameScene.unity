@@ -1046,7 +1046,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   dragController: {fileID: 1848705538}
   scoreManager: {fileID: 1473526064}
-  gameOverDelay: 0.8
+  board: {fileID: 745718774}
+  popupDelay: 0.3
   menuSceneName: MenuScene
   gameOverPopup: {fileID: 1709997645}
   finalScoreText: {fileID: 2138294638}
@@ -1841,6 +1842,16 @@ MonoBehaviour:
   introRowDelay: 0.04
   introColumnDelay: 0.015
   introSfx: {fileID: 8300000, guid: 5274ed621526630448bcc355a66f53d5, type: 3}
+  collapseStartDelay: 0.3
+  collapseSpread: 0.5
+  collapseFallDuration: 1.2
+  collapseGravity: 35
+  collapseJumpPower: 5
+  collapseSideSpeed: 2
+  collapseSpin: 360
+  collapseSfx: {fileID: 8300000, guid: b974c04d617161d4cb75a9f2a584acc5, type: 3}
+  previewAlpha: 0.4
+  previewSortingOrder: 5
 --- !u!4 &745718775
 Transform:
   m_ObjectHideFlags: 0
@@ -2684,8 +2695,8 @@ MonoBehaviour:
   - {r: 0.3529412, g: 0.39215687, b: 0.47058824, a: 1}
   - {r: 0.22745098, g: 0.24705882, b: 0.29411766, a: 1}
   trayScale: 0.55
-  guaranteeChance: 0
-  bigPieceWeight: 10
+  guaranteeChance: 1
+  bigPieceWeight: 5
   lineClearBias: 0.5
   holeFitWeight: 5
 --- !u!4 &1129377955

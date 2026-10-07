@@ -31,8 +31,13 @@ public class Board : MonoBehaviour
     [SerializeField] private float collapseSpin = 360f;
     [SerializeField] private AudioClip collapseSfx;
 
+    [Header("Placement Preview")]
+    [SerializeField, Range(0f, 1f)] private float previewAlpha = 0.4f;
+    [SerializeField] private int previewSortingOrder = 5;
+
     private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size];
     private Transform[] cellTransforms;
+    private readonly List<SpriteRenderer> previewBlocks = new List<SpriteRenderer>();
 
     public bool IsReady { get; private set; }
 
@@ -219,6 +224,45 @@ public class Board : MonoBehaviour
             block.color = color;
 
             placedBlocks[target.x, target.y] = block;
+        }
+    }
+
+    // 드래그 중인 블록이 놓일 칸을 반투명하게 표시
+    public void ShowPreview(Vector2Int[] shape, Vector2Int origin, Color color)
+    {
+        color.a = previewAlpha;
+
+        for (int i = 0; i < shape.Length; i++)
+        {
+            if (i >= previewBlocks.Count)
+            {
+                SpriteRenderer newPreview = Instantiate(blockPrefab, transform);
+                newPreview.name = "Preview";
+                newPreview.sortingOrder = previewSortingOrder;
+                previewBlocks.Add(newPreview);
+            }
+
+            Vector2Int target = origin + shape[i];
+            SpriteRenderer preview = previewBlocks[i];
+            preview.transform.position = GetCellPosition(target.x, target.y);
+            preview.color = color;
+            preview.gameObject.SetActive(true);
+        }
+
+        for (int i = shape.Length; i < previewBlocks.Count; i++)
+        {
+            previewBlocks[i].gameObject.SetActive(false);
+        }
+    }
+
+    public void HidePreview()
+    {
+        foreach (SpriteRenderer preview in previewBlocks)
+        {
+            if (preview != null)
+            {
+                preview.gameObject.SetActive(false);
+            }
         }
     }
 

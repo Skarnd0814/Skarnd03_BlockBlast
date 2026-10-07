@@ -40,15 +40,41 @@ public class DragController : MonoBehaviour
         else if (draggingPiece != null && Pointer.current.press.isPressed)
         {
             draggingPiece.transform.position = pointerWorld + new Vector3(0f, dragOffsetY, 0f);
+            UpdatePreview();
         }
     }
 
     private void OnDisable()
     {
+        if (board != null)
+        {
+            board.HidePreview();
+        }
+
         if (draggingPiece != null)
         {
             draggingPiece.ReturnToTray();
             draggingPiece = null;
+        }
+    }
+
+    private Vector2Int GetDropOrigin()
+    {
+        Vector3 originWorld = draggingPiece.transform.position - (Vector3)draggingPiece.Center;
+        return board.WorldToCell(originWorld);
+    }
+
+    private void UpdatePreview()
+    {
+        Vector2Int origin = GetDropOrigin();
+
+        if (board.CanPlace(draggingPiece.Cells, origin))
+        {
+            board.ShowPreview(draggingPiece.Cells, origin, draggingPiece.Color);
+        }
+        else
+        {
+            board.HidePreview();
         }
     }
 
@@ -81,8 +107,8 @@ public class DragController : MonoBehaviour
 
     private void Drop()
     {
-        Vector3 originWorld = draggingPiece.transform.position - (Vector3)draggingPiece.Center;
-        Vector2Int origin = board.WorldToCell(originWorld);
+        board.HidePreview();
+        Vector2Int origin = GetDropOrigin();
 
         if (board.CanPlace(draggingPiece.Cells, origin))
         {
