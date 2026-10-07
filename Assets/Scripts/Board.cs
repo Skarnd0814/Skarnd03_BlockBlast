@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -6,6 +7,11 @@ public class Board : MonoBehaviour
 
     [SerializeField] private GameObject cellPrefab;
     [SerializeField] private SpriteRenderer blockPrefab;
+
+    [Header("Clear Effect")]
+    [SerializeField] private float clearDuration = 0.3f;
+    [SerializeField] private float clearPunchScale = 1.25f;
+    [SerializeField] private float clearStaggerDelay = 0.02f;
 
     private SpriteRenderer[,] placedBlocks = new SpriteRenderer[Size, Size];
 
@@ -111,7 +117,6 @@ public class Board : MonoBehaviour
         return lineCount;
     }
 
-    // 🆕 현재 판 상태를 bool 복사본으로 (true = 블록 있음)
     public bool[,] GetOccupancy()
     {
         bool[,] grid = new bool[Size, Size];
@@ -155,12 +160,64 @@ public class Board : MonoBehaviour
 
     private void RemoveBlock(int x, int y)
     {
-        if (placedBlocks[x, y] == null)
+        SpriteRenderer block = placedBlocks[x, y];
+
+        if (block == null)
         {
             return;
         }
 
-        Destroy(placedBlocks[x, y].gameObject);
         placedBlocks[x, y] = null;
+
+        float delay = (x + y) * clearStaggerDelay;
+        StartCoroutine(AnimateClear(block, delay));
+    }
+
+    private IEnumerator AnimateClear(SpriteRenderer block, float delay)
+    {
+        block.sortingOrder = 15;
+
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        Transform blockTransform = block.transform;
+        Vector3 startScale = blockTransform.localScale;
+        Color startColor = block.color;
+        float growPortion = 0.4f;
+        float elapsed = 0f;
+
+        while (elapsed < clearDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / clearDuration);
+
+            float scale;
+            float alpha;
+
+            if (progress < growPortion)
+            {
+                float growProgress = progress / growPortion;
+                scale = Mathf.Lerp(1f, clearPunchScale, growProgress);
+                alpha = 1f;
+            }
+            else
+            {
+                float shrinkProgress = (progress - growPortion) / (1f - growPortion);
+                scale = Mathf.Lerp(clearPunchScale, 0f, shrinkProgress);
+                alpha = 1f - shrinkProgress;
+            }
+
+            blockTransform.localScale = startScale * scale;
+
+            Color color = startColor;
+            color.a = alpha;
+            block.color = color;
+
+            yield return null;
+        }
+
+        Destroy(block.gameObject);
     }
 }
