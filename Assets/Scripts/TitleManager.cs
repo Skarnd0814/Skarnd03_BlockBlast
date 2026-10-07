@@ -14,7 +14,7 @@ public class TitleManager : MonoBehaviour
         BlinkTouchText();
 
         if (Pointer.current != null && 
-            Pointer.current.press.wasPressedThisFrame)
+            Pointer.current.press.wasReleasedThisFrame)
         {
             SceneManager.LoadScene(nextSceneName);
         }
