@@ -996,7 +996,7 @@ MonoBehaviour:
   touchText: {fileID: 911483654}
   blinkSpeed: 1.5
   nextSceneName: MenuScene
-  gameStartSfx: {fileID: 0}
+  gameStartSfx: {fileID: 8300000, guid: b837afa962fe83b4b90b32bd76374e00, type: 3}
 --- !u!4 &2127326745
 Transform:
   m_ObjectHideFlags: 0
