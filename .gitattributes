@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# GitHub 언어 통계에서 TextMesh Pro 기본 셰이더(외부 패키지 파일) 제외
+Assets/TextMesh[[:space:]]Pro/** linguist-vendored
