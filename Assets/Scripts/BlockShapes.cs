@@ -55,6 +55,26 @@ public static class BlockShapes
         // S / Z
         new Vector2Int[] { new(0, 0), new(1, 0), new(1, 1), new(2, 1) },
         new Vector2Int[] { new(1, 0), new(2, 0), new(0, 1), new(1, 1) },
+
+        // 큰 ㄱ (5칸): 윗줄 3칸 + 오른쪽 아래로 2칸
+        new Vector2Int[] { new(0, 2), new(1, 2), new(2, 2),
+                                                 new(2, 1),
+                                                 new(2, 0) },
+
+        // 큰 ㄴ (5칸): 왼쪽 세로 3칸 + 아랫줄 오른쪽으로 2칸
+        new Vector2Int[] { new(0, 2),
+                           new(0, 1),
+                           new(0, 0), new(1, 0), new(2, 0) },
+
+        // 큰 ┌ (5칸): 윗줄 3칸 + 왼쪽 아래로 2칸
+        new Vector2Int[] { new(0, 2), new(1, 2), new(2, 2),
+                           new(0, 1),
+                           new(0, 0) },
+
+        // 큰 ┘ (5칸): 오른쪽 세로 3칸 + 아랫줄 왼쪽으로 2칸
+        new Vector2Int[] {                       new(2, 2),
+                                                 new(2, 1),
+                           new(0, 0), new(1, 0), new(2, 0) },
     };
 
     // All과 같은 순서의 이름 (Inspector의 모양별 가중치 목록에 표시)
@@ -71,6 +91,7 @@ public static class BlockShapes
         "L ┗ (세로)", "L ┛ (세로)", "L ━┛ (가로)", "L ┏━ (가로)",
         "T ┻", "T ┳",
         "S", "Z",
+        "큰 ㄱ (5칸)", "큰 ㄴ (5칸)", "큰 ┌ (5칸)", "큰 ┘ (5칸)",
     };
 
     // All과 같은 순서의 기본 출현 가중치 (클수록 자주 나옴). 큰 블록 위주로 터뜨리는 손맛을 살리는 값
@@ -87,6 +108,7 @@ public static class BlockShapes
         1.5f, 1.5f, 1.5f, 1.5f,
         1.5f, 1.5f,
         1.5f, 1.5f,
+        3f, 3f, 3f, 3f,
     };
 
     public static Vector2Int[] GetRandom()
