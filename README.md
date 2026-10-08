@@ -126,6 +126,7 @@
 * `cfd5b01` - GitHub 언어 통계에서 TextMesh Pro 셰이더 제외
 * `134bd29` - 메뉴 화면 최고 점수 표시 추가
 * `5423bae` - 큰 L 블록 4방향 추가 (ㄱ, ㄴ, ┌, ┘)
+* `1bf4f33` - v1.1 업데이트: README 반영 및 버전 1.1 설정 (Version 1.1 / Bundle Version Code 2)
 
 ---
 
