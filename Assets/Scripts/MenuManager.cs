@@ -2,11 +2,17 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MenuManager : MonoBehaviour
 {
     [SerializeField] private GameObject settingsPopup;
     [SerializeField] private string gameSceneName = "InGameScene";
+
+    [Header("Best Score")]
+    [SerializeField] private TMP_Text bestScoreText;
+    [Tooltip("{0} 자리에 최고 점수가 들어감")]
+    [SerializeField] private string bestScoreFormat = "BEST {0}";
 
     [SerializeField] private Slider musicSlider;
     [SerializeField] private Slider soundSlider;
@@ -25,7 +31,20 @@ public class MenuManager : MonoBehaviour
         musicSlider.value = SoundManager.Instance.BgmVolume;
         soundSlider.value = SoundManager.Instance.SfxVolume;
 
+        ShowBestScore();
         StartCoroutine(FadeInButtons());
+    }
+
+    // 인게임(ScoreManager)과 같은 저장 키로 최고 점수를 읽어 표시
+    private void ShowBestScore()
+    {
+        if (bestScoreText == null)
+        {
+            return;
+        }
+
+        int bestScore = PlayerPrefs.GetInt(ScoreManager.BestScoreKey, 0);
+        bestScoreText.text = string.Format(bestScoreFormat, bestScore);
     }
 
     private IEnumerator FadeInButtons()

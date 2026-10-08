@@ -16,7 +16,7 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private float punchScale = 1.3f;
     [SerializeField] private float punchDuration = 0.25f;
 
-    private const string BestScoreKey = "BestScore";
+    public const string BestScoreKey = "BestScore";
 
     public int Score { get; private set; }
     public int BestScore { get; private set; }
